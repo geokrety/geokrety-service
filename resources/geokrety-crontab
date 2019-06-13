@@ -1,0 +1,9 @@
+MAIL=contact@geokrety.org
+SHELL=/bin/bash
+HOME=/opt/geokrety
+LOGFILE=/proc/1/fd/1
+PHP=/usr/local/bin/php
+MANAGER=/opt/geokrety/GeokretyServiceManager.php
+
+# m h  dom mon dow command
+* * * * * root ${PHP} ${MANAGER} "HelloJob" >> "$LOGFILE"
