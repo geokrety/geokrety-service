@@ -45,7 +45,7 @@ tail: ## tail -f app logs
 	@echo "${APP_NAME} logs (ctr+c to quit)"
 	docker logs -f ${APP_NAME}
 
-copy: ## copy host resources to the running container
+copy: ## copy host resources to the running container and restart cron and composer
 	@echo " - www"
 	docker cp www/. ${APP_NAME}:/var/www/html
 	@echo " - resources"
@@ -56,3 +56,5 @@ copy: ## copy host resources to the running container
 	docker cp resources/geokrety-crontab ${APP_NAME}:/etc/cron.d/geokrety-cron
 	@echo " - cron reload"
 	winpty docker exec -it ${APP_NAME} service cron reload
+	@echo " - composer install"
+	winpty docker exec -it ${APP_NAME} composer install

@@ -1,0 +1,15 @@
+{
+  "config": {
+    "platform": {
+      "php": "7.3.5"
+    }
+  },
+  "require": {
+    "geokretymap/php-client": "^0.1.0"
+  },
+  "autoload": {
+    "classmap": [
+      "lib/"
+    ]
+  }
+}
