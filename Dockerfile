@@ -1,7 +1,9 @@
 ARG IMAGE=php:7.3.5-apache-stretch
 FROM ${IMAGE}
 
-MAINTAINER GeoKrety Team <contact@geokrety.org>
+LABEL maintainer="GeoKrety Team <contact@geokrety.org>"
+
+ARG TIMEZONE=Europe/Paris
 
 WORKDIR /opt/geokrety
 
@@ -15,7 +17,17 @@ RUN apt-get update \
         unzip \
         gnuplot \
     && apt-get clean \
-    && rm -r /var/lib/apt/lists/*
+    && rm -r /var/lib/apt/lists/* \
+    \
+    && pecl install -o -f redis \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis \
+    \
+    && echo 'date.timezone = "${TIMEZONE}"' > /usr/local/etc/php/conf.d/timezone.ini \
+    \
+    && curl -sS https://getcomposer.org/installer | php -- --filename=composer --install-dir=/usr/local/bin/ \
+    \
+    && echo "extensions ok"
 
 # Install scripts and cron
 COPY resources /opt/geokrety/
