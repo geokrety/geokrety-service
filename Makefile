@@ -6,6 +6,12 @@ cnf ?= config.env
 include $(cnf)
 export $(shell sed 's/=.*//' $(cnf))
 
+ifeq "$(OS)" "Windows_NT"
+	PREFIX=winpty
+else
+	PREFIX=
+endif
+
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -25,7 +31,7 @@ build-nc: ## Build the container without caching
 run: ## Run container on port configured in `config.env`
 	docker run -d --env-file=./config.env -p=$(HOST_PORT):$(CONTAINER_PORT) --name="$(APP_NAME)" $(APP_NAME)
 
-up: build run ## Run container on port configured in `config.env` (Alias to run)
+up: build run ## Alias to build and run
 
 stop: ## Stop a running container
 	docker stop $(APP_NAME)
@@ -38,8 +44,8 @@ remove: ## Remove container
 
 stoprm: stop remove ## Alias to stop and remove
 
-win-sh: ## winpty shell
-	winpty docker exec -it ${APP_NAME} bash
+sh: ## container shell
+	${PREFIX} docker exec -it ${APP_NAME} bash
 
 tail: ## tail -f app logs
 	@echo "${APP_NAME} logs (ctr+c to quit)"
@@ -55,6 +61,6 @@ copy: ## copy host resources to the running container and restart cron and compo
 	@echo " - cron config"
 	docker cp resources/geokrety-crontab ${APP_NAME}:/etc/cron.d/geokrety-cron
 	@echo " - cron reload"
-	winpty docker exec -it ${APP_NAME} service cron reload
+	${PREFIX} docker exec -it ${APP_NAME} service cron reload
 	@echo " - composer install"
-	winpty docker exec -it ${APP_NAME} composer install
+	${PREFIX} docker exec -it ${APP_NAME} composer install

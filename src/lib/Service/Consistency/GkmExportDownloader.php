@@ -1,11 +1,14 @@
 <?php
 
-namespace Consistency;
+namespace Service\Consistency;
+
+use Service\ConfigurableService;
+use Service\RedisClient;
 
 /**
  * GkmExportDownloader : download GeoKretyMap export into redis
  */
-class GkmExportDownloader {
+class GkmExportDownloader extends ConfigurableService {
     const CONFIG_GKM_EXPORT_BASIC = 'gkm_export_basic';
     private $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
 
@@ -57,13 +60,5 @@ class GkmExportDownloader {
         ];
     }
 
-    private function initConfig($config, $name, $attribute) {
-        $this->config = $config;
-        if (isset($config[$name])) {
-            $this->$attribute = $config[$name];
-        } else if (isset($_ENV[$name])) {
-            $this->$attribute = $_ENV[$name];
-        }
-    }
 
 }

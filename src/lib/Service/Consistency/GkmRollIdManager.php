@@ -1,11 +1,14 @@
 <?php
 
-namespace Consistency;
+namespace Service\Consistency;
+
+use Service\ConfigurableService;
+use Service\RedisClient;
 
 /**
  * GkmExportDownloader : download GeoKretyMap export into redis
  */
-class GkmRollIdManager {
+class GkmRollIdManager extends ConfigurableService {
     const CONFIG_CONSISTENCY_ROLL_MIN_DAYS = 'gkm_consistency_roll_min_days';
 
     const REDIS_ROLL_ID = 'gkm_roll_id';
@@ -30,15 +33,15 @@ class GkmRollIdManager {
         $redisRollId = $this->getRollId();
         $redisRollTimestamp = $this->getRollTimestamp();
         $redisRollTimestampStr = $this->dateStr($redisRollTimestamp);
-        echo "redis was rollId:$redisRollId, timestamp:$redisRollTimestamp -> $redisRollTimestampStr<br/>";
+        echo "redis was rollId:$redisRollId, timestamp:$redisRollTimestamp -> $redisRollTimestampStr\n";
         if ($redisRollId == "" || $redisRollTimestamp == "") {
-            echo "fist launch!<br/>";
+            echo "fist launch!\n";
             $this->setRollId(1);
             $this->setRollTimestamp(-1);
             return 1;
         }
         if ($redisRollId < 0 || $redisRollTimestamp < 0) {
-            echo "lt 0<br/>";
+            echo "lt 0\n";
             return -1;
         }
         $minTimestamp = $redisRollTimestamp + ($this->rollMinDays * self::DAY_IN_SECOND);
@@ -48,7 +51,7 @@ class GkmRollIdManager {
             $this->setRollTimestamp(-1);
             return $redisRollId+1;
         }
-        echo "No job before $minTimestampStr <br/>";
+        echo "No job before $minTimestampStr \n";
         return -2;
     }
 
@@ -56,11 +59,11 @@ class GkmRollIdManager {
         $redisRollId = $this->getRollId();
         $redisRollTimestamp = $this->getRollTimestamp();
         if ($redisRollId == "" || $redisRollId < 0) {
-            echo "enforce 1<br/>";
+            echo "enforce 1\n";
             return 1;
         }
         $rollId = $redisRollId+1;
-        echo "enforce $rollId<br/>";
+        echo "enforce $rollId\n";
         return $rollId;
     }
 
@@ -87,15 +90,5 @@ class GkmRollIdManager {
 
     public function dateStr($ts) {
         return date("Y-m-d H:i:s", $ts);
-    }
-
-
-    private function initConfig($config, $name, $attribute) {
-        $this->config = $config;
-        if (isset($config[$name])) {
-            $this->$attribute = $config[$name];
-        } else if (isset($_ENV[$name])) {
-            $this->$attribute = $_ENV[$name];
-        }
     }
 }

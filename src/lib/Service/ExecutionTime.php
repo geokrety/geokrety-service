@@ -1,6 +1,6 @@
 <?php
 
-namespace Consistency;
+namespace Service;
 
 // src : https://stackoverflow.com/questions/535020/tracking-the-script-execution-time-in-php
 class ExecutionTime {

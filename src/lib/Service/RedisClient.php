@@ -1,25 +1,31 @@
 <?php
 
-namespace Consistency;
+namespace Service;
+
+use Exception;
 
 /**
  * RedisClient : redis read write access
  */
-class RedisClient {
+class RedisClient extends ConfigurableService {
+    const CONFIG_REDIS_HOST = 'redis_host';
+    const CONFIG_REDIS_PORT = 'redis_port';
+
     private static $_instance = null;
 
-    private $redisHost = "redis";
-    private $redisPort = 6379;
+    protected $redisHost = "redis";
+    protected $redisPort = 6379;
 
     private $link = null;
 
-    private function __construct() {
+    private function __construct($config) {
+        $this->initConfig($config, self::CONFIG_REDIS_HOST, "redisHost");
+        $this->initConfig($config, self::CONFIG_REDIS_PORT, "redisPort");
     }
 
     public static function getInstance($config) {
-        // TODO $config to handle
         if (is_null(self::$_instance)) {
-            self::$_instance = new RedisClient();
+            self::$_instance = new RedisClient($config);
         }
 
         return self::$_instance;
@@ -29,10 +35,15 @@ class RedisClient {
         if ($this->link != null) {
                 return $this->link;
         }
-        $this->link = new \Redis();
-        $this->link->connect($this->redisHost, $this->redisPort);
-        echo "Connection to REDIS $this->redisHost:$this->redisPort successfully<br/>\n";
-        return $this->link;
+        try {
+            $this->link = new \Redis();
+            $this->link->connect($this->redisHost, $this->redisPort);
+            echo "Connection to REDIS $this->redisHost:$this->redisPort successfully\n";
+            return $this->link;
+        } catch (Exception $exc) {
+            $errMsg = "Unable to connect to REDIS host:$this->redisHost port:$this->redisPort ".$exc->getMessage();
+            throw new Exception($errMsg);
+        }
     }
 
     public function get($redisKey) {

@@ -1,0 +1,4 @@
+- [ ] finish consistency integration
+- [ ] add logger framework
+- [ ] from crontab add a way to setup extra env variable(s) for a given job (example force=true)
+- [ ] from makefile add a way to setup user config file (not in scm) that override default one values

@@ -1,6 +1,10 @@
 <?php
 
-namespace Consistency;
+namespace Service\Consistency;
+
+use Service\ConfigurableService;
+use Service\RedisClient;
+use Service\ExecutionTime;
 
 use GKDB; // to duplicate on move to dedicated repo (or create share lib)
 use Gkm\Gkm;
@@ -9,7 +13,7 @@ use Gkm\Domain\GeokretyNotFoundException;
 /**
  * GkmConsistencyCheck : analyse consistency between GeoKrety database and GeoKretyMap service
  */
-class GkmConsistencyCheck {
+class GkmConsistencyCheck extends ConfigurableService {
     const CONFIG_CONSISTENCY_ENFORCE = 'gkm_consistency_enforce';
     const CONFIG_API_ENDPOINT = 'gkm_api_endpoint';
 
@@ -46,7 +50,7 @@ class GkmConsistencyCheck {
 
         $this->rollId = $this->gkmRollIdManager->giveMeARollId();
         if ($this->rollId <= 0 && !$this->enforce) {
-            echo "--> nothing to do";
+            echo "--> nothing to do\n";
             return;
         } else if ($this->rollId <= 0) {
             $this->rollId = $this->gkmRollIdManager->enforceARollId();
@@ -55,7 +59,7 @@ class GkmConsistencyCheck {
         $executionTime->start();
         $this->gkmExportDownloader->run($this->rollId);
         $executionTime->end();
-        echo "--> download and put in redis $executionTime <br/>\n";
+        echo "--> download and put in redis $executionTime\n";
 
 
         $executionTime->start();
@@ -71,7 +75,7 @@ class GkmConsistencyCheck {
             $geokretsCount = count($geokrets);
             $endOfTable = ($geokretsCount == 0);
 
-            echo "$i ) $geokretsCount geokrets<br/>" . $executionTime;
+            echo "$i ) $geokretsCount geokrets\n" . $executionTime;
 
             foreach  ($geokrets as $geokrety) {
                 $geokretyCount++;
@@ -84,13 +88,13 @@ class GkmConsistencyCheck {
             // DEBUG // echo $this->objectToHtml($gkmGeokrets);
         }
         $executionTime->end();
-        echo "--> compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime <br/>\n";
+        echo "--> compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime\n";
 
 
         $runExecutionTime->end();
-        echo "---TOTAL---<br/>\n";
+        echo "---TOTAL---\n";
         echo $runExecutionTime;
-//         echo "TOTAL) $batchSize x $batchCount geokrety<br/>" . $runExecutionTime;
+//         echo "TOTAL) $batchSize x $batchCount geokrety" . $runExecutionTime;
 
         $this->gkmRollIdManager->endARollId($this->rollId);
     }
@@ -107,15 +111,15 @@ class GkmConsistencyCheck {
 
         // compare $geokretyObject from database /vs/ $gkmObject (redis cache) from last export
         if (!isset($gkmObject) || $gkmObject == null) {
-            echo " #$rollId X $gkId missing on GKM side<br/>\n";
+            echo " #$rollId X $gkId missing on GKM side\n";
             return false;
         }
 
         if ($gkName != $gkmName) {
-            echo " #$rollId X $gkId not the same name($gkName) on GKM side($gkmName)<br/>\n";
+            echo " #$rollId X $gkId not the same name($gkName) on GKM side($gkmName)\n";
             return false;
         }
-        // DEBUG // echo " #$rollId * $gkId OK<br/>\n";
+        // DEBUG // echo " #$rollId * $gkId OK\n";
         return true;
     }
 
@@ -137,7 +141,7 @@ $sql = <<<EOQUERY
         LIMIT $batchSize
 EOQUERY;
         }
-        // DEBUG // echo "$sql<br/>\n";
+        // DEBUG // echo "$sql\n";
 
         if (!($stmt = $link->prepare($sql))) {
             throw new \Exception($action.' prepare failed: ('.$this->dblink->errno.') '.$this->dblink->error);
@@ -162,7 +166,7 @@ EOQUERY;
 
         while ($stmt->fetch()) {
             $geokret = [];
-            // DEBUG // echo "$gkId<br/>\n";
+            // DEBUG // echo "$gkId\n";
             $geokret["id"] = $gkId;
             $geokret["nr"] = $nr;
             $geokret["nazwa"] = $nazwa;
@@ -177,20 +181,12 @@ EOQUERY;
         return $geokrets;
     }
 
-    private function initConfig($config, $name, $attribute) {
-        $this->config = $config;
-        if (isset($config[$name])) {
-            $this->$attribute = $config[$name];
-        } else if (isset($_ENV[$name])) {
-            $this->$attribute = $_ENV[$name];
-        }
-    }
 
     private function collectGKMGeokretyOneByOne($geokrets = []) {
         $gkmGeokrets = [];
         foreach ($geokrets as $geokrety ) {
             $gkId = $geokrety["id"];
-            // DEBUG //  echo $gkId."<br/>\n";
+            // DEBUG //  echo $gkId."\n";
             try {
               $gkmGeokrety = $geokrety = $this->gkm->getGeokretyById($gkId);
               array_push($gkmGeokrets, $gkmGeokrety);
@@ -211,7 +207,7 @@ EOQUERY;
     }
 
     private function logMissingGkm($geokretyId) {
-      echo "missing geokrety id=$geokretyId on GKM side<br/>\n";
+      echo "missing geokrety id=$geokretyId on GKM side\n";
     }
 
 
