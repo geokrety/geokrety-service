@@ -18,8 +18,8 @@ class GkmConsistencyCheck extends ConfigurableService {
     const CONFIG_API_ENDPOINT = 'gkm_api_endpoint';
 
     //~ config
-    private $apiEndpoint = "https://api.geokretymap.org";
-    private $enforce= false;
+    protected $apiEndpoint = "https://api.geokretymap.org";
+    protected $enforce= false;
 
     //~ private
     private $rollId = 0;

@@ -8,24 +8,33 @@ use Service\Consistency\GkmConsistencyCheck;
 
 class JobManager {
     private $jobName;
+    private $jobOptions;
 
-    public function __construct($name) {
-        $this->jobName = $name;
+    public function __construct($args) {
+        $this->jobName = $args[0];
+        $this->jobOptions = array_slice($args, 1);
     }
 
     public function run() {
         try {
-            $this->log("run");
-            if ($this->jobName == "consistency") {
-                $this->runConsistency();
+            if (!isset($this->jobName)) {
+                throw new Exception("job name expected as first argument");
             }
+            if ($this->jobName == "consistency") {
+                $this->runConsistency($this->jobOptions);
+                return;
+            }
+            throw new Exception("job name $this->jobName not yet implemented");
         } catch (Exception $exception) {
             $this->log("unexpected error: ".$exception->getMessage());
         }
     }
 
-    public function runConsistency() {
+    public function runConsistency($options) {
         $gkmConfig = [];
+            if (in_array("force", $options)) {
+                $gkmConfig[GkmConsistencyCheck::CONFIG_CONSISTENCY_ENFORCE] = true;
+            }
             $consistencyCheck = new GkmConsistencyCheck($gkmConfig);
             $consistencyCheck->run();
     }

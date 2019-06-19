@@ -6,6 +6,6 @@ require_once '__sentry.php';
 use Service\JobManager;
 
 if (isset($argv)) {
-    $manager = new JobManager($argv[1]);
+    $manager = new JobManager(array_slice($argv,1));
     $manager->run();
 }

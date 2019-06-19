@@ -28,6 +28,6 @@ class ExecutionTime {
          $diff = round($this->endMicroTime - $this->startMicroTime, 2);
          return "This process used " . $this->runTime($this->endTime, $this->startTime, "utime") .
         " ms for its computations\nIt spent " . $this->runTime($this->endTime, $this->startTime, "stime") .
-        " ms in system calls / Execution time $diff seconds<br/>\n";
+        " ms in system calls / Execution time $diff seconds\n";
      }
  }

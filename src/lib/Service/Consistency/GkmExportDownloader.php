@@ -31,7 +31,7 @@ class GkmExportDownloader extends ConfigurableService {
                 $geokrety = $this->xmlElementToGeokrety($geokretXml);
                 $gkId = $geokrety["id"];
                 if ($index > 0 && $index % 5000 == 0) {
-                    echo " * #$rollId index $index<br/>\n";
+                    echo " * #$rollId index $index\n";
                     flush();
                 }
                 $this->redis->putInRedis($rollId, $gkId, $geokrety, $this->redisValueTimeToLiveSec);
