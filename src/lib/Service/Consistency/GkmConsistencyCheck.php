@@ -3,10 +3,10 @@
 namespace Service\Consistency;
 
 use Service\ConfigurableService;
-use Service\RedisClient;
 use Service\ExecutionTime;
+use Service\GKDB; // create geokrety shared library ?
+use Service\RedisClient;
 
-use GKDB; // to duplicate on move to dedicated repo (or create share lib)
 use Gkm\Gkm;
 use Gkm\Domain\GeokretyNotFoundException;
 
@@ -124,7 +124,7 @@ class GkmConsistencyCheck extends ConfigurableService {
     }
 
     private function collectNextGeokretyToSync($batchSize = 50) { // 30 SOMETIME OK // 50 RESULT IN 503
-        $link = GKDB::getLink();
+        $link = GKDB::getLink($this->config);
 $sql = <<<EOQUERY
         SELECT    `id`,`nr`,`nazwa`,`owner`,`timestamp`
         FROM      `gk-geokrety`
