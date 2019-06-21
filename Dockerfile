@@ -23,6 +23,8 @@ RUN apt-get update \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis \
     \
+    && docker-php-ext-install mysqli \
+    \
     && echo 'date.timezone = "${TIMEZONE}"' > /usr/local/etc/php/conf.d/timezone.ini \
     \
     && curl -sS https://getcomposer.org/installer | php -- --filename=composer --install-dir=/usr/local/bin/ \
