@@ -59,7 +59,7 @@ class GKDB extends ConfigurableService {
             }
         }
         // DEBUG //
-        echo 'connect '.$this->dbUsername.'@'.$this->dbHostname.' using '.$this->dbPassword.' basename:'.$this->dbBasename.' timezone:'.$this->dbTimezone.' charset:'.$this->dbCharset;
+        echo 'connect '.$this->dbUsername.'@'.$this->dbHostname.' using '.$this->dbPassword.' basename:'.$this->dbBasename.' timezone:'.$this->dbTimezone.' charset:'.$this->dbCharset.'\n';
         try {
             $this->link = mysqli_connect($this->dbHostname, $this->dbUsername, $this->dbPassword);
             if (!$this->link) {// lets retry

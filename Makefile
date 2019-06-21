@@ -64,3 +64,6 @@ copy: ## copy host resources to the running container and restart cron and compo
 	${PREFIX} docker exec -it ${APP_NAME} service cron reload
 	@echo " - composer install"
 	${PREFIX} docker exec -it ${APP_NAME} composer install
+
+gkmSync: ## start gkm sync job
+	${PREFIX} docker exec -it ${APP_NAME} bash -c "php GeokretyServiceManager.php consistency force"

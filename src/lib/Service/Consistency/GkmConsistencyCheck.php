@@ -116,11 +116,20 @@ class GkmConsistencyCheck extends ConfigurableService {
         }
 
         if ($gkName != $gkmName) {
-            echo " #$rollId X $gkId not the same name($gkName) on GKM side($gkmName)\n";
+            echo $this->dockerConsoleWorkaround(" #$rollId X $gkId not the same name($gkName) on GKM side($gkmName)\n");
             return false;
         }
         // DEBUG // echo " #$rollId * $gkId OK\n";
         return true;
+    }
+
+    // x90 make docker toolbox console to leave // https://github.com/docker/toolbox/issues/695
+    private function dockerConsoleWorkaround($nonLatinString) {
+      return strtr(
+        $nonLatinString,
+        array(
+          "\x90" => " ")
+      );
     }
 
     private function collectNextGeokretyToSync($batchSize = 50) { // 30 SOMETIME OK // 50 RESULT IN 503

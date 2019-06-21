@@ -8,6 +8,10 @@ ARG TIMEZONE=Europe/Paris
 WORKDIR /opt/geokrety
 
 # Add extension to php
+#        zlib1g-dev libicu-dev g++ \  ## required by ICU => INTL // https://github.com/docker-library/php/issues/57#issuecomment-103021688
+#    && docker-php-ext-configure intl \
+#    && docker-php-ext-install intl \
+#    \
 RUN apt-get update \
     && apt-get install -y \
         wget \

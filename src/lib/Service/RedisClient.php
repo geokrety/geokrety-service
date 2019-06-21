@@ -8,8 +8,8 @@ use Exception;
  * RedisClient : redis read write access
  */
 class RedisClient extends ConfigurableService {
-    const CONFIG_REDIS_HOST = 'redis_host';
-    const CONFIG_REDIS_PORT = 'redis_port';
+    const CONFIG_REDIS_HOST = 'REDIS_HOSTNAME';
+    const CONFIG_REDIS_PORT = 'REDIS_PORT';
 
     private static $_instance = null;
 
