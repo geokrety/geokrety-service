@@ -3,6 +3,8 @@
 - [x] finish consistency integration
 - [x] fix count diff between consistency check and geokrety table > need to compare unique id instead of timestamp
 - [x] compare: add owner id and distance traveled 
-- [ ] add logger framework
-- [ ] find a better workaround for non latin chars to avoid docker console crash https://github.com/docker/toolbox/issues/695
+- [x] add logger framework 
+- [ ] add metrics tu push gateway
+- [ ] create temp job report file - to avoid docker console crash https://github.com/docker/toolbox/issues/695
+- [ ] check minio to push report file
 - [ ] from makefile add a way to setup user config file (not in scm) that override default one values

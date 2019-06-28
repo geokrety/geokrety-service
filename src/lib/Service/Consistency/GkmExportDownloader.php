@@ -4,6 +4,7 @@ namespace Service\Consistency;
 
 use Service\ConfigurableService;
 use Service\RedisClient;
+use Service\GKLogger;
 
 /**
  * GkmExportDownloader : download GeoKretyMap export into redis
@@ -13,11 +14,13 @@ class GkmExportDownloader extends ConfigurableService {
     private $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
 
     private $redisValueTimeToLiveSec= 60;// TODO add to config
+    private $logger;
 
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_GKM_EXPORT_BASIC, "exportUrl");
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
+        $this->logger = GKLogger::getInstance();
     }
 
     public function run($rollId) {
@@ -31,13 +34,14 @@ class GkmExportDownloader extends ConfigurableService {
                 $geokrety = $this->xmlElementToGeokrety($geokretXml);
                 $gkId = $geokrety["id"];
                 if ($index > 0 && $index % 5000 == 0) {
-                    echo " * #$rollId index $index\n";
+                    $this->logger->debug("index $index", ["rollId" => $rollId, "gkmCount" => $index]);
                     flush();
                 }
                 $this->redis->putInRedis($rollId, $gkId, $geokrety, $this->redisValueTimeToLiveSec);
                 $index++;
             }
         }
+        return $index-1;
     }
 
     private function xmlElementToGeokrety($xmlString) {

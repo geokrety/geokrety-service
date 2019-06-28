@@ -9,10 +9,12 @@ use Service\Consistency\GkmConsistencyCheck;
 class JobManager {
     private $jobName;
     private $jobOptions;
+    private $logger;
 
     public function __construct($args) {
         $this->jobName = $args[0];
         $this->jobOptions = array_slice($args, 1);
+        $this->logger = GKLogger::getInstance();
     }
 
     public function run() {
@@ -26,7 +28,8 @@ class JobManager {
             }
             throw new Exception("job name $this->jobName not yet implemented");
         } catch (Exception $exception) {
-            $this->log("unexpected error: ".$exception->getMessage());
+            $this->logger->error("unexpected error ".$exception->getMessage(),['job' => $this->jobName]);
+            $this->logger->debug("unexpected error",['job' => $this->jobName, 'exception' => $exception]);
         }
     }
 
@@ -39,7 +42,4 @@ class JobManager {
             $consistencyCheck->run();
     }
 
-    public function log($msg) {
-        echo date('Y-m-d H:i:s')."#$this->jobName | $msg\n";
-    }
 }

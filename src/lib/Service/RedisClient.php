@@ -17,10 +17,13 @@ class RedisClient extends ConfigurableService {
     protected $redisPort = 6379;
 
     private $link = null;
+    private $logger;
+
 
     private function __construct($config) {
         $this->initConfig($config, self::CONFIG_REDIS_HOST, "redisHost");
         $this->initConfig($config, self::CONFIG_REDIS_PORT, "redisPort");
+        $this->logger = GKLogger::getInstance();
     }
 
     public static function getInstance($config) {
@@ -38,10 +41,12 @@ class RedisClient extends ConfigurableService {
         try {
             $this->link = new \Redis();
             $this->link->connect($this->redisHost, $this->redisPort);
-            echo "Connection to REDIS $this->redisHost:$this->redisPort successfully\n";
+            $this->logger->debug("Connection to REDIS successfully",['host' => $this->redisHost, "port" =>  $this->redisPort]);
             return $this->link;
         } catch (Exception $exc) {
             $errMsg = "Unable to connect to REDIS host:$this->redisHost port:$this->redisPort ".$exc->getMessage();
+            $this->logger->error("Connection to REDIS failed ".$exception->getMessage(),['host' => $this->redisHost, 'port' =>  $this->redisPort]);
+            $this->logger->debug("Connection to REDIS failed",['host' => $this->redisHost, 'port' =>  $this->redisPort, 'exception' => $exception]);
             throw new Exception($errMsg);
         }
     }

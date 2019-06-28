@@ -1,6 +1,6 @@
 <?php
 // Error reporting - do not report warn
-error_reporting(E_ERROR | E_PARSE);
+// error_reporting(E_ERROR | E_PARSE);
 
 // Composer
 $vendorDir = join(DIRECTORY_SEPARATOR, array(dirname(__FILE__), 'vendor'));

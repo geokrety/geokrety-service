@@ -4,6 +4,7 @@ namespace Service\Consistency;
 
 use Service\ConfigurableService;
 use Service\RedisClient;
+use Service\GKLogger;
 
 /**
  * GkmExportDownloader : download GeoKretyMap export into redis
@@ -18,11 +19,13 @@ class GkmRollIdManager extends ConfigurableService {
 
     private $rollMinDays = 7;
     private $redisConnection;
+    private $logger;
 
     public function __construct($config) {
+        $this->initConfig($config, self::CONFIG_CONSISTENCY_ROLL_MIN_DAYS, "rollMinDays");
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
-        $this->initConfig($config, self::CONFIG_CONSISTENCY_ROLL_MIN_DAYS, "rollMinDays");
+        $this->logger = GKLogger::getInstance();
     }
 
     public function getRollMinDays() {
@@ -33,15 +36,14 @@ class GkmRollIdManager extends ConfigurableService {
         $redisRollId = $this->getRollId();
         $redisRollTimestamp = $this->getRollTimestamp();
         $redisRollTimestampStr = $this->dateStr($redisRollTimestamp);
-        echo "redis was rollId:$redisRollId, timestamp:$redisRollTimestamp -> $redisRollTimestampStr\n";
+        $this->logger->debug("redis was rollId:$redisRollId, timestamp:$redisRollTimestamp -> $redisRollTimestampStr");
         if ($redisRollId == "" || $redisRollTimestamp == "") {
-            echo "fist launch!\n";
+            $this->logger->debug("first launch!", ["rollId" => 1]);
             $this->setRollId(1);
             $this->setRollTimestamp(-1);
             return 1;
         }
         if ($redisRollId < 0 || $redisRollTimestamp < 0) {
-            echo "lt 0\n";
             return -1;
         }
         $minTimestamp = $redisRollTimestamp + ($this->rollMinDays * self::DAY_IN_SECOND);
@@ -51,7 +53,7 @@ class GkmRollIdManager extends ConfigurableService {
             $this->setRollTimestamp(-1);
             return $redisRollId+1;
         }
-        echo "No job before $minTimestampStr \n";
+        $this->logger->info("No job before $minTimestampStr");
         return -2;
     }
 
@@ -59,11 +61,11 @@ class GkmRollIdManager extends ConfigurableService {
         $redisRollId = $this->getRollId();
         $redisRollTimestamp = $this->getRollTimestamp();
         if ($redisRollId == "" || $redisRollId < 0) {
-            echo "enforce 1\n";
+            $this->logger->info("enforce", ["rollId" => 1]);
             return 1;
         }
         $rollId = $redisRollId+1;
-        echo "enforce $rollId\n";
+        $this->logger->info("enforce", ["rollId" => $rollId]);
         return $rollId;
     }
 

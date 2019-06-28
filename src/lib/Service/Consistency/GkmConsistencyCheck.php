@@ -5,6 +5,7 @@ namespace Service\Consistency;
 use Service\ConfigurableService;
 use Service\ExecutionTime;
 use Service\GKDB; // create geokrety shared library ?
+use Service\GKLogger;
 use Service\RedisClient;
 
 use Gkm\Gkm;
@@ -30,11 +31,13 @@ class GkmConsistencyCheck extends ConfigurableService {
 
     private $currentId = null;
 
-    private $redisConnection;
+    private $logger;
+    private $logContext = [];
 
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_API_ENDPOINT, "apiEndpoint");
         $this->initConfig($config, self::CONFIG_CONSISTENCY_ENFORCE, "enforce");
+        $this->logger = GKLogger::getInstance();
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
         $this->gkmExportDownloader = new GkmExportDownloader($config);
@@ -49,22 +52,27 @@ class GkmConsistencyCheck extends ConfigurableService {
         $runExecutionTime->start();
 
         $this->rollId = $this->gkmRollIdManager->giveMeARollId();
+        $this->logContext["rollId"] = $this->rollId;
         if ($this->rollId <= 0 && !$this->enforce) {
-            echo "--> nothing to do\n";
+            $this->logger->info("nothing to do", $this->logContext);
             return;
         } else if ($this->rollId <= 0) {
             $this->rollId = $this->gkmRollIdManager->enforceARollId();
+            $this->logContext["rollId"] = $this->rollId;
+            $this->logContext["enforce"] = true;
         }
 
         $executionTime->start();
-        $this->gkmExportDownloader->run($this->rollId);
+        $gkmCount = $this->gkmExportDownloader->run($this->rollId);
+        $this->logContext["gkmCount"] = $gkmCount;
         $executionTime->end();
-        echo "--> download and put in redis $executionTime\n";
+        $this->logger->info("download and put $gkmCount in redis $executionTime", $this->logContext);
+
 
 
         $executionTime->start();
         $batchSize = 50;
-        $batchCount = 10;
+        $batchCount = 2000;
         $endOfTable = false;
         $geokretyCount = 0;
         $wrongGeokretyCount = 0;
@@ -75,7 +83,7 @@ class GkmConsistencyCheck extends ConfigurableService {
             $geokretsCount = count($geokrets);
             $endOfTable = ($geokretsCount == 0);
 
-            echo "$i ) $geokretsCount geokrets\n" . $executionTime;
+            $this->logger->debug("$i ) $geokretsCount geokrets", $this->logContext);
 
             foreach  ($geokrets as $geokrety) {
                 $geokretyCount++;
@@ -83,18 +91,18 @@ class GkmConsistencyCheck extends ConfigurableService {
                 if (!$isValid) {
                   $wrongGeokretyCount++;
                 }
+                $this->logContext["gkCount"] = $geokretyCount;
+                $this->logContext["syncDiff"] = $wrongGeokretyCount;
             }
             flush();
             // DEBUG // echo $this->objectToHtml($gkmGeokrets);
         }
         $executionTime->end();
-        echo "--> compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime\n";
+        $this->logger->info("compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime", $this->logContext);
 
 
         $runExecutionTime->end();
-        echo "---TOTAL---\n";
-        echo $runExecutionTime;
-//         echo "TOTAL) $batchSize x $batchCount geokrety" . $runExecutionTime;
+        $this->logger->info("TOTAL: $runExecutionTime", $this->logContext);
 
         $this->gkmRollIdManager->endARollId($this->rollId);
     }
@@ -115,35 +123,27 @@ class GkmConsistencyCheck extends ConfigurableService {
 
         // compare $geokretyObject from database /vs/ $gkmObject (redis cache) from last export
         if (!isset($gkmObject) || $gkmObject == null) {
-            echo " #$rollId X $gkId missing on GKM side\n";
+            $this->logger->info(" #$rollId X $gkId missing on GKM side", $this->logContext);
             return false;
         }
 
         if ($gkName != $gkmName) {
-            echo $this->dockerConsoleWorkaround(" #$rollId X $gkId not the same name($gkName) on GKM side($gkmName)\n");
+            $this->logger->info(" #$rollId X $gkId not the same name on GKM side", $this->logContext);
+            // $gkName != $gkmName // x90 make docker toolbox console to leave // https://github.com/docker/toolbox/issues/695
             return false;
         }
 
         if ($gkOwnerId != $gkmOwnerId) {
-            echo " #$rollId X $gkId not the same owner id($gkOwnerId) on GKM side($gkmOwnerId)\n";
+            $this->logger->info(" #$rollId X $gkId not the same owner id($gkOwnerId) on GKM side($gkmOwnerId)", $this->logContext);
             return false;
         }
 
         if ($gkDistanceKm != $gkmDistanceKm) {
-            echo " #$rollId X $gkId not the same distance traveled($gkDistanceKm) on GKM side($gkmDistanceKm)\n";
+            $this->logger->info(" #$rollId X $gkId not the same distance traveled($gkDistanceKm) on GKM side($gkmDistanceKm)", $this->logContext);
             return false;
         }
-        // DEBUG // echo " #$rollId * $gkId OK\n";
+        // DEBUG // $this->logger->info(" #$rollId * $gkId OK", $this->logContext);
         return true;
-    }
-
-    // x90 make docker toolbox console to leave // https://github.com/docker/toolbox/issues/695
-    private function dockerConsoleWorkaround($nonLatinString) {
-      return strtr(
-        $nonLatinString,
-        array(
-          "\x90" => " ")
-      );
     }
 
     private function collectNextGeokretyToSync($batchSize = 50) { // 30 SOMETIME OK // 50 RESULT IN 503
@@ -198,7 +198,7 @@ EOQUERY;
         return $geokrets;
     }
 
-
+    // deprecated
     private function collectGKMGeokretyOneByOne($geokrets = []) {
         $gkmGeokrets = [];
         foreach ($geokrets as $geokrety ) {
@@ -214,6 +214,7 @@ EOQUERY;
         return $gkmGeokrets;
     }
 
+    // deprecated
     private function collectGKMGeokretyBulk($geokrets = []) {
         $gkmGeokrets = [];
         $idsOnly = [];
@@ -223,6 +224,7 @@ EOQUERY;
         return $geokrety = $this->gkm->getGeokretyByIds($idsOnly);
     }
 
+    // deprecated
     private function logMissingGkm($geokretyId) {
       echo "missing geokrety id=$geokretyId on GKM side\n";
     }
