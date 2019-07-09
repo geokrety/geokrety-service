@@ -15,8 +15,8 @@ use Gkm\Domain\GeokretyNotFoundException;
  * GkmConsistencyCheck : analyse consistency between GeoKrety database and GeoKretyMap service
  */
 class GkmConsistencyCheck extends ConfigurableService {
-    const CONFIG_CONSISTENCY_ENFORCE = 'gkm_consistency_enforce';
-    const CONFIG_API_ENDPOINT = 'gkm_api_endpoint';
+    const CONFIG_CONSISTENCY_ENFORCE = 'GKM_CONSISTENCY_ENFORCE';
+    const CONFIG_API_ENDPOINT = 'GKM_API_ENDPOINT';
 
     //~ config
     protected $apiEndpoint = "https://api.geokretymap.org";
@@ -28,6 +28,7 @@ class GkmConsistencyCheck extends ConfigurableService {
     private $gkm;// gkm api client
 
     private $gkmRollIdManager;
+    private $gkmMetricsPublisher;
 
     private $currentId = null;
 
@@ -43,6 +44,7 @@ class GkmConsistencyCheck extends ConfigurableService {
         $this->gkmExportDownloader = new GkmExportDownloader($config);
         $this->gkm = new Gkm();// no more used
         $this->gkmRollIdManager = new GkmRollIdManager($config);
+        $this->gkmMetricsPublisher = new GkmMetricsPublisher($config);
     }
 
     public function run() {
@@ -67,7 +69,7 @@ class GkmConsistencyCheck extends ConfigurableService {
         $this->logContext["gkmCount"] = $gkmCount;
         $executionTime->end();
         $this->logger->info("download and put $gkmCount in redis $executionTime", $this->logContext);
-
+        $downloadTimeSec = $executionTime->durationSec();
 
 
         $executionTime->start();
@@ -99,12 +101,15 @@ class GkmConsistencyCheck extends ConfigurableService {
         }
         $executionTime->end();
         $this->logger->info("compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime", $this->logContext);
-
+        $compareTimeSec = $executionTime->durationSec();
 
         $runExecutionTime->end();
         $this->logger->info("TOTAL: $runExecutionTime", $this->logContext);
 
         $this->gkmRollIdManager->endARollId($this->rollId);
+        $this->gkmMetricsPublisher->gkmSyncMetrics($this->rollId, $geokretyCount, $gkmCount, $wrongGeokretyCount,
+            $downloadTimeSec, $compareTimeSec);
+        $this->gkmMetricsPublisher->publish();
     }
 
 

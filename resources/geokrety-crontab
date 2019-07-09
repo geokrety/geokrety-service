@@ -6,4 +6,4 @@ PHP=/usr/local/bin/php
 MANAGER=/opt/geokrety/GeokretyServiceManager.php
 
 # m h  dom mon dow command
-* * * * * root ${PHP} ${MANAGER} "HelloJob" >> "$LOGFILE"
+* * * * * root ${PHP} ${MANAGER} "health" >> "$LOGFILE"

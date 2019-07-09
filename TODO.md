@@ -4,7 +4,10 @@
 - [x] fix count diff between consistency check and geokrety table > need to compare unique id instead of timestamp
 - [x] compare: add owner id and distance traveled 
 - [x] add logger framework 
-- [ ] add metrics tu push gateway
+- [x] fix simple health job
+- [ ] add metrics tu push gateway // WIP : need to test with real host port
+- [ ] add optional logger name
 - [ ] create temp job report file - to avoid docker console crash https://github.com/docker/toolbox/issues/695
 - [ ] check minio to push report file
 - [ ] from makefile add a way to setup user config file (not in scm) that override default one values
+- [ ] add grafana GKM Sync panel

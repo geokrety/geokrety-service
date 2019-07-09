@@ -10,14 +10,17 @@ use Service\GKLogger;
  * GkmExportDownloader : download GeoKretyMap export into redis
  */
 class GkmExportDownloader extends ConfigurableService {
-    const CONFIG_GKM_EXPORT_BASIC = 'gkm_export_basic';
-    private $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
+    const CONFIG_GKM_EXPORT_BASIC = 'GKM_EXPORT_BASIC';
+    const CONFIG_GKM_EXPORT_REDIS_TTL = 'CONFIG_GKM_EXPORT_REDIS_TTL';
 
-    private $redisValueTimeToLiveSec= 60;// TODO add to config
+    private $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
+    private $redisValueTimeToLiveSec = 60;
+
     private $logger;
 
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_GKM_EXPORT_BASIC, "exportUrl");
+        $this->initConfig($config, self::CONFIG_GKM_EXPORT_REDIS_TTL, "redisValueTimeToLiveSec");
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
         $this->logger = GKLogger::getInstance();
@@ -37,11 +40,15 @@ class GkmExportDownloader extends ConfigurableService {
                     $this->logger->debug("index $index", ["rollId" => $rollId, "gkmCount" => $index]);
                     flush();
                 }
-                $this->redis->putInRedis($rollId, $gkId, $geokrety, $this->redisValueTimeToLiveSec);
+                $this->redis->putInRedis($rollId, $gkId, $geokrety, $this->getRedisTtl());
                 $index++;
             }
         }
         return $index-1;
+    }
+
+    private function getRedisTtl() {
+        return (int)$this->redisValueTimeToLiveSec;
     }
 
     private function xmlElementToGeokrety($xmlString) {
