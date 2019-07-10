@@ -5,7 +5,7 @@
 - [x] compare: add owner id and distance traveled 
 - [x] add logger framework 
 - [x] fix simple health job
-- [ ] add metrics tu push gateway // WIP : need to test with real host port
+- [x] add metrics tu push gateway
 - [ ] add optional logger name
 - [ ] create temp job report file - to avoid docker console crash https://github.com/docker/toolbox/issues/695
 - [ ] check minio to push report file

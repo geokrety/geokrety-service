@@ -13,8 +13,8 @@ class GkmExportDownloader extends ConfigurableService {
     const CONFIG_GKM_EXPORT_BASIC = 'GKM_EXPORT_BASIC';
     const CONFIG_GKM_EXPORT_REDIS_TTL = 'CONFIG_GKM_EXPORT_REDIS_TTL';
 
-    private $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
-    private $redisValueTimeToLiveSec = 60;
+    protected $exportUrl = "https://api.geokrety.org/basex/export/geokrety.xml";
+    protected $redisValueTimeToLiveSec = 60;
 
     private $logger;
 

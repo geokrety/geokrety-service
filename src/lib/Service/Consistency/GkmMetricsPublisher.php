@@ -14,16 +14,16 @@ use Prometheus\PushGateway;
  * GkmMetricsPublisher : collect and publish geokrety GkmSync metrics
  */
 class GkmMetricsPublisher extends ConfigurableService {
-    const CONFIG_PUSH_GATEWAY_HOST = 'PGA_HOST';
-    const CONFIG_PUSH_GATEWAY_PORT = 'PGA_PORT';
+    const CONFIG_PUSH_GATEWAY_HOST = 'PUSH_GW_HOST';
+    const CONFIG_PUSH_GATEWAY_PORT = 'PUSH_GW_PORT';
 
     private $job = "GkmMetricsPublisher";
     private $namespace = "gkm";
     private $logger;
     private $registry;
 
-    private $pushGatewayHost = 'pushgateway';
-    private $pushGatewayPort = 9091;
+    protected $pushGatewayHost = 'pushgateway';
+    protected $pushGatewayPort = 9091;
 
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_PUSH_GATEWAY_HOST, "pushGatewayHost");
@@ -45,14 +45,14 @@ class GkmMetricsPublisher extends ConfigurableService {
         ]);
         //~ sync results
         $syncResultGauge = $this->registry->registerGauge($this->namespace, "gkmSyncResult", $help, ['rollId', 'counter']);
-        $syncResultGauge->set($gkNumber, [$rollId, 'gkNumber']);
-        $syncResultGauge->set($gkmNumber, [$rollId, 'gkmNumber']);
-        $syncResultGauge->set($wrongCount, [$rollId, 'wrongCount']);
+        $syncResultGauge->set((int)$gkNumber, [$rollId, 'gkNumber']);
+        $syncResultGauge->set((int)$gkmNumber, [$rollId, 'gkmNumber']);
+        $syncResultGauge->set((int)$wrongCount, [$rollId, 'wrongCount']);
 
         //~ sync performances : execution
         $syncTimeGauge = $this->registry->registerGauge($this->namespace, "gkmSyncTime", $help, ['rollId', 'time']);
-        $syncTimeGauge->set($downloadTimeMs, [$rollId, 'download']);
-        $syncTimeGauge->set($compareTimeMs, [$rollId, 'compare']);
+        $syncTimeGauge->set(floatval($downloadTimeSec), [$rollId, 'download']);
+        $syncTimeGauge->set(floatval($compareTimeSec), [$rollId, 'compare']);
     }
 
     public function publish() {
