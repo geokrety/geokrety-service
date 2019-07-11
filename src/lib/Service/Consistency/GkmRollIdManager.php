@@ -25,7 +25,7 @@ class GkmRollIdManager extends ConfigurableService {
         $this->initConfig($config, self::CONFIG_CONSISTENCY_ROLL_MIN_DAYS, "rollMinDays");
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public function getRollMinDays() {

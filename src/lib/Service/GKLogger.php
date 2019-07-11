@@ -13,19 +13,17 @@ class GKLogger extends ConfigurableService {
     const CONFIG_LOG_FILE = 'LOG_FILE';
     const CONFIG_LOG_LEVEL = 'LOG_LEVEL';
 
-    private static $_instance = null;
-
     protected $logFile = 'php://stdout';
     protected $logLevel = 'DEBUG';
 
     private $link = null;
 
-    private function __construct() {
+    public function __construct($channel = null) {
         $this->initConfig([], self::CONFIG_LOG_FILE, "logFile");
         $this->initConfig([], self::CONFIG_LOG_LEVEL, "logLevel");
         // DEBUG // echo "logFile:$this->logFile, logLevel:$this->logLevel\n";
 
-        $this->link = new Logger();
+        $this->link = new Logger($channel);
         $this->link->setHandler(new File($this->logFile));
 
         // by default log all
@@ -34,14 +32,6 @@ class GKLogger extends ConfigurableService {
         } else if ($this->logLevel == "ERROR") {
             $this->link->setLogLevel(LogLevel::ERROR);
         }
-    }
-
-    public static function getInstance() {
-        if (is_null(self::$_instance)) {
-            self::$_instance = new GKLogger();
-        }
-
-        return self::$_instance;
     }
 
     public function debug($msg, $mixed = []) { $this->link->debug($msg, $mixed); }

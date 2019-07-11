@@ -14,7 +14,7 @@ class JobManager {
     public function __construct($args) {
         $this->jobName = $args[0];
         $this->jobOptions = array_slice($args, 1);
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public function run() {

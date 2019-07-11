@@ -28,7 +28,7 @@ class GkmMetricsPublisher extends ConfigurableService {
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_PUSH_GATEWAY_HOST, "pushGatewayHost");
         $this->initConfig($config, self::CONFIG_PUSH_GATEWAY_PORT, "pushGatewayPort");
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public function gkmSyncMetrics($rollId, $gkNumber, $gkmNumber, $wrongCount, $downloadTimeSec, $compareTimeSec) {

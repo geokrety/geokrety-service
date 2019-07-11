@@ -8,7 +8,7 @@ class HealthJob {
     private $logger;
 
     public function __construct() {
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public function run() {

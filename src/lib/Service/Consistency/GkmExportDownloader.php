@@ -23,7 +23,7 @@ class GkmExportDownloader extends ConfigurableService {
         $this->initConfig($config, self::CONFIG_GKM_EXPORT_REDIS_TTL, "redisValueTimeToLiveSec");
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public function run($rollId) {

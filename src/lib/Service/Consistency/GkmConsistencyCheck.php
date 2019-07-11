@@ -38,7 +38,7 @@ class GkmConsistencyCheck extends ConfigurableService {
     public function __construct($config) {
         $this->initConfig($config, self::CONFIG_API_ENDPOINT, "apiEndpoint");
         $this->initConfig($config, self::CONFIG_CONSISTENCY_ENFORCE, "enforce");
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
         $this->redis = RedisClient::getInstance($config);
         $this->redis->connect();
         $this->gkmExportDownloader = new GkmExportDownloader($config);

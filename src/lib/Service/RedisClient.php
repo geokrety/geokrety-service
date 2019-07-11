@@ -23,7 +23,7 @@ class RedisClient extends ConfigurableService {
     private function __construct($config) {
         $this->initConfig($config, self::CONFIG_REDIS_HOST, "redisHost");
         $this->initConfig($config, self::CONFIG_REDIS_PORT, "redisPort");
-        $this->logger = GKLogger::getInstance();
+        $this->logger = new GKLogger(get_class($this));
     }
 
     public static function getInstance($config) {
