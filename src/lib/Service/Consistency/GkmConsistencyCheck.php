@@ -29,6 +29,7 @@ class GkmConsistencyCheck extends ConfigurableService {
 
     private $gkmRollIdManager;
     private $gkmMetricsPublisher;
+    private $gkmReport;
 
     private $currentId = null;
 
@@ -63,6 +64,8 @@ class GkmConsistencyCheck extends ConfigurableService {
             $this->logContext["rollId"] = $this->rollId;
             $this->logContext["enforce"] = true;
         }
+        //~ let's create a new consistency report
+        $this->gkmReport = new GkmConsistencyReport($this->rollId);
 
         $executionTime->start();
         $gkmCount = $this->gkmExportDownloader->run($this->rollId);
@@ -71,6 +74,7 @@ class GkmConsistencyCheck extends ConfigurableService {
         $this->logger->info("download and put $gkmCount in redis $executionTime", $this->logContext);
         $downloadTimeSec = $executionTime->durationSec();
 
+        $this->gkmReport->downloadDone($downloadTimeSec);
 
         $executionTime->start();
         $batchSize = 50;
@@ -102,6 +106,7 @@ class GkmConsistencyCheck extends ConfigurableService {
         $executionTime->end();
         $this->logger->info("compare $geokretyCount geokrety ($wrongGeokretyCount are invalids) - $executionTime", $this->logContext);
         $compareTimeSec = $executionTime->durationSec();
+        $this->gkmReport->compareDone($geokretyCount, $wrongGeokretyCount, $compareTimeSec);
 
         $runExecutionTime->end();
         $this->logger->info("TOTAL: $runExecutionTime", $this->logContext);
@@ -128,26 +133,30 @@ class GkmConsistencyCheck extends ConfigurableService {
 
         // compare $geokretyObject from database /vs/ $gkmObject (redis cache) from last export
         if (!isset($gkmObject) || $gkmObject == null) {
-            $this->logger->info(" #$rollId X $gkId missing on GKM side", $this->logContext);
+            $this->logger->debug(" #$rollId X $gkId missing on GKM side", $this->logContext);
+            $this->gkmReport->diffNotOnGkm($gkId);
             return false;
         }
 
         if ($gkName != $gkmName) {
-            $this->logger->info(" #$rollId X $gkId not the same name on GKM side", $this->logContext);
-            // $gkName != $gkmName // x90 make docker toolbox console to leave // https://github.com/docker/toolbox/issues/695
+            // 'x90' char make docker toolbox console to leave // https://github.com/docker/toolbox/issues/695
+            $this->logger->debug(" #$rollId X $gkId not the same name on GKM side", $this->logContext);
+            $this->gkmReport->diffNotSameName($gkId, $gkName, $gkmName);
             return false;
         }
 
         if ($gkOwnerId != $gkmOwnerId) {
-            $this->logger->info(" #$rollId X $gkId not the same owner id($gkOwnerId) on GKM side($gkmOwnerId)", $this->logContext);
+            $this->logger->debug(" #$rollId X $gkId not the same owner id($gkOwnerId) on GKM side($gkmOwnerId)", $this->logContext);
+            $this->gkmReport->diffNotSameOwnerId($gkId, $gkOwnerId, $gkmOwnerId);
             return false;
         }
 
         if ($gkDistanceKm != $gkmDistanceKm) {
-            $this->logger->info(" #$rollId X $gkId not the same distance traveled($gkDistanceKm) on GKM side($gkmDistanceKm)", $this->logContext);
+            $this->logger->debug(" #$rollId X $gkId not the same distance traveled($gkDistanceKm) on GKM side($gkmDistanceKm)", $this->logContext);
+            $this->gkmReport->diffNotSameDistance($gkId, $gkDistanceKm, $gkmDistanceKm);
             return false;
         }
-        // DEBUG // $this->logger->info(" #$rollId * $gkId OK", $this->logContext);
+        // DEBUG // $this->logger->debug(" #$rollId * $gkId OK", $this->logContext);
         return true;
     }
 

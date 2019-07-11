@@ -7,7 +7,7 @@
 - [x] fix simple health job
 - [x] add metrics tu push gateway
 - [x] add optional logger name
-- [ ] create temp job report file - to avoid docker console crash https://github.com/docker/toolbox/issues/695
+- [x] create temp job report file - to avoid docker console crash https://github.com/docker/toolbox/issues/695
 - [ ] check minio to push report file
 - [ ] from makefile add a way to setup user config file (not in scm) that override default one values
 - [ ] add grafana GKM Sync panel
