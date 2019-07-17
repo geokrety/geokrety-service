@@ -7,7 +7,8 @@
   "require": {
     "geokretymap/php-client": "^0.1.0",
     "azurre/php-simple-logger": "^1.0",
-    "jimdo/prometheus_client_php": "^0.9.1"
+    "jimdo/prometheus_client_php": "^0.9.1",
+    "aws/aws-sdk-php": "^3.107"
   },
   "autoload": {
     "classmap": [
