@@ -51,38 +51,25 @@ class JobManager {
     public function job_sandbox() {
         // https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/getting-started_basic-usage.html
         // https://docs.aws.amazon.com/fr_fr/sdk-for-php/v3/developer-guide/s3-examples-creating-buckets.html
+
         $bucket = 'gkm-sync';
-        $accessKey = 'minioAK';
-        $secretKey = 'miniominioSK';
-        $minioEndpoint = 'http://192.168.99.100:9000';
-        $s3 = new \Aws\S3\S3Client([
-                'version' => 'latest',
-                'region'  => 'us-east-1',
-                'endpoint' => $minioEndpoint,
-                'use_path_style_endpoint' => true,
-                'credentials' => [
-                        'key'    => $accessKey,
-                        'secret' => $secretKey,
-                    ],
+
+        $minClient = \Service\MinIOClient::getInstance([
+            'MINIO_ACCESS_KEY' => 'minioAK',
+            'MINIO_SECRET_KEY' => 'miniominioSK',
+            'MINIO_HOSTNAME' => '192.168.99.100',
+            'MINIO_PORT' => '9000'
         ]);
+        $minClient->connect();
+
         $this->logger->info("list bucket");
-        $result = $s3->listBuckets();
-        $names = $result->search('Buckets[].Name');
+        $names = $minClient->listBucketsNames();
         foreach ($names as $name) {
             $this->logger->info(" * ".$name);
         }
-        if (!in_array($bucket, $names)) {
-            $this->logger->info("create bucket $bucket");
-            $s3->createBucket(['Bucket' => $bucket]);
-        }
 
         $this->logger->info("putObject ".__FILE__);
-        // Send a PutObject request and get the result object.
-        $insert = $s3->putObject([
-             'Bucket' => $bucket,
-             'Key'    => basename(__FILE__),
-             'SourceFile'   => __FILE__
-        ]);
+        $minClient->putFileInBucket($bucket, basename(__FILE__), __FILE__);
 
         $this->logger->info("sandbox done");
     }
