@@ -111,10 +111,34 @@ class GkmConsistencyCheck extends ConfigurableService {
         $runExecutionTime->end();
         $this->logger->info("TOTAL: $runExecutionTime", $this->logContext);
 
+        // end roll
         $this->gkmRollIdManager->endARollId($this->rollId);
+
+        // publish metrics
         $this->gkmMetricsPublisher->gkmSyncMetrics($this->rollId, $geokretyCount, $gkmCount, $wrongGeokretyCount,
             $downloadTimeSec, $compareTimeSec);
         $this->gkmMetricsPublisher->publish();
+
+        // publish report
+        $this->publishReport();
+    }
+
+    private function publishReport() {
+        try {
+            $reportFile = $this->gkmReport->getReportFile();
+
+            $bucket = 'gkm-sync';
+
+            $minClient = \Service\MinIOClient::getInstance([]);
+            $minClient->connect();
+
+            $objectName = basename($reportFile);
+
+            $this->logger->info("putObject ".$objectName);
+            $minClient->putFileInBucket($bucket, $objectName, $reportFile);
+        } catch (Exception $exc) {
+            $this->logger->error("Unable to publish report: ".$exception->getMessage(), $this->logContext);
+        }
     }
 
 
